@@ -18,10 +18,10 @@ with open(args.config, "rb") as file:
     config_dict = json.load(file)
 
 # Create and enter working directory
-if capture_config["run_id"] == "iso_date"
-    run_dir = datetime.now().isoformat()[:9] # look for more elegant solution?
+if config_dict["run_id"] == "iso_date":
+    run_dir = datetime.now().isoformat()[:10] # look for more elegant solution?
 else:
-    run_dir = capture_config["run_id"]
+    run_dir = config_dict["run_id"]
 
 os.mkdir(run_dir)
 os.chdir(run_dir)
@@ -45,7 +45,7 @@ for i in range(0, config_dict["num_frames"]):
     image_arr = cam.capture_array("main")
 
     image_arr = image_arr[:, 250:-480, :] # Cuts off all black regions of image and reduces data size by ~18 %
-    np.save(timestamp.replace(microsecond=0).isoformat(), image_arr)
+    np.save(timestamp.replace(microsecond=0).isoformat() + f"_FRAME_{i}", image_arr)
 
     if datetime.now() >= end_time:
         print("WARNING: Execution of frame capture code exceeded specified capture interval. Consider reducing exposure time or increasing the invterval.")
