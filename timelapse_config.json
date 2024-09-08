@@ -1,0 +1,11 @@
+{
+    "num_frames" : 120,
+    "capture_interval" : 30,
+    "run_id" : "iso_date",
+    "camera_controls" :
+        {
+            "ExposureTime" : 15e6,
+            "AnalogueGain" : 1,
+            "AeEnable" : false
+        }
+}
