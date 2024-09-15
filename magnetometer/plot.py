@@ -23,7 +23,7 @@ while True:
         ys[i % len(ys)] = Bx 
 
         latest_graph = asciiize(
-            xs,
+            #xs,
             ys,
             sequence_colors=[Color.RED, Color.BLUE_VIOLET],
             inter_points_margin=5,
