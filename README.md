@@ -30,3 +30,21 @@ ImportError: libhdf5_serial.so.103: cannot open shared object file: No such file
 ```
 Instead, do:
 `sudo apt-get install python3-h5py`
+
+- check I2C devices:
+      - run `i2cdetect -y 1`, you should see something like:
+  
+      ```
+           0  1  2  3  4  5  6  7  8  9  a  b  c  d  e  f
+      00:                         -- -- -- -- -- -- -- -- 
+      10: -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- 
+      20: -- 21 -- -- -- -- -- -- -- -- -- -- -- -- -- -- 
+      30: -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- 
+      40: -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- 
+      50: 50 51 52 53 54 55 56 57 -- -- -- -- -- -- -- -- 
+      60: -- -- -- -- -- -- -- -- UU -- -- -- -- -- -- -- 
+      70: -- -- -- -- -- -- -- --    
+      ```
+  - `UU` indicates the clock is being used as a hardware clokc
+  - `21` is the magnetometer (sometimes it's also `20`, `23`... we need to get this set to a fixed value
+  - `50 - 57` might be the camera-- currently unknown
