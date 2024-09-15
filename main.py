@@ -47,14 +47,14 @@ async def get_measurements():
     await asyncio.sleep(1)
     return dict(
         temperature=np.random.normal(loc=0, scale=1),
-        magnetic_field=np.random.normal(loc=0, scale=1, shape=(3,))
+        magnetic_field=np.random.normal(loc=0, scale=1, size=(3,))
     )
 
 
 async def get_exposure():
     await asyncio.sleep(30)
     return dict(
-        exposure=np.random.normal(loc=0, scale=1, shape=(n_xpix, n_ypix, 3)),
+        exposure=np.random.normal(loc=0, scale=1, size=(n_xpix, n_ypix, 3)),
     )
 
 
@@ -67,15 +67,17 @@ async def main():
     os.makedirs(outdir, exist_ok=True)
 
     exposure_file_path, measurement_file_path = create_files(
-        f'{outdir}/{start.hour}.hdf5'
+        outdir, start.hour
     )
 
     exposure_index = 0
     measurement_index = 0
 
-    while ...:
+    while True:
         current = get_now()
         current_timestamp = current.timestamp()
+
+        print('current_timestamp=',current_timestamp)
 
         if (current_timestamp - start_of_day_timestamp) * SECONDS_TO_DAYS > 1:
             start_of_day_timestamp = current_timestamp
@@ -83,7 +85,7 @@ async def main():
 
             outdir = f'./{get_datestr(current)}'
             exposure_file_path, measurement_file_path = create_files(
-                f'{outdir}/{start.hour}.hdf5'
+                outdir, current.hour
             )
 
             exposure_index = 0
@@ -93,7 +95,7 @@ async def main():
             start_of_hour_timestamp = current_timestamp
 
             exposure_file_path, measurement_file_path = create_files(
-                f'{outdir}/{start.hour}.hdf5'
+                outdir, current.hour
             )
 
             exposure_index = 0
@@ -128,6 +130,8 @@ async def main():
                 exposure_file_path, exposure_datum, exposure_index
             )
             exposure_index += 1
+
+        print('all tasks done, measurement_index=',measurement_index,'exposure_index=',exposure_index)
 
 
 if __name__ == '__main__':
