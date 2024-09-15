@@ -54,18 +54,3 @@ def insert_datum(path, datum, index):
     with h5py.File(path, 'r+') as f:
         for key, value in datum.items():
             f[key][index] = value
-
-
-"""
-example program loop:
-
-path = create_file(...)
-
-# measurements
-for i in range(...):
-    temperature = get_temperature(...)
-    bx, by, bz = get_magnetic_filed(...)
-    ...
-
-"""
-
