@@ -21,7 +21,7 @@ def _create_file(path, dataset_parameters):
     return path
 
 
-def _create_files(outdir, name, n_measurements, n_exposures, n_xpix, n_ypix, n_colors):
+def _create_files(outdir, name, n_measurements, n_exposures, n_xpix, n_ypix, n_colors=3):
     exposure_dataset_parameters = [
         dict(name='timestamp', shape=(n_exposures,), dtype=np.float64),
         dict(
@@ -47,9 +47,11 @@ def _create_files(outdir, name, n_measurements, n_exposures, n_xpix, n_ypix, n_c
         measurement_dataset_parameters
     )
 
+    return exposure_file_path, measurement_file_path
+
 
 def insert_datum(path, datum, index):
-    with h5py.File(path, 'r') as f:
+    with h5py.File(path, 'r+') as f:
         for key, value in datum.items():
             f[key][index] = value
 
