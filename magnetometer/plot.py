@@ -24,8 +24,7 @@ while True:
 
         latest_graph = asciiize(
             xs,
-            [7, 8, 3, 17, 19, 18, 5, 2, 20],
-
+            ys,
             sequence_colors=[Color.RED, Color.BLUE_VIOLET],
             inter_points_margin=5,
             height=20,
