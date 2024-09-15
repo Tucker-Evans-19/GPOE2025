@@ -6,31 +6,39 @@ import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
 
 # I2C address of the RM3100 - might need to be changed.
-RM3100_ADDR = 0x20  
+RM3100_ADDR = 0x23
 
 # Initialize I2C (bus number depends on your Raspberry Pi version)
 bus = smbus.SMBus(1)
 
-# Function to read data from the RM3100 magnetometer
 def read_magnetometer():
-    # This part assumes specific registers for reading XYZ values. Adapt it as needed. This will depend on your wiring.
     try:
-        # Read X-axis data
-        x_high = bus.read_byte_data(RM3100_ADDR, 0x00) 
-        x_low = bus.read_byte_data(RM3100_ADDR, 0x01)
-        x = (x_high << 8) | x_low
-        
-        # Read Y-axis data
-        y_high = bus.read_byte_data(RM3100_ADDR, 0x02)
-        y_low = bus.read_byte_data(RM3100_ADDR, 0x03)
-        y = (y_high << 8) | y_low
-        
-        # Read Z-axis data
-        z_high = bus.read_byte_data(RM3100_ADDR, 0x04)
-        z_low = bus.read_byte_data(RM3100_ADDR, 0x05)
-        z = (z_high << 8) | z_low
-        
+        # Read X-axis data (24-bit)
+        x_high = bus.read_byte_data(RM3100_ADDR, 0x24)
+        x_mid = bus.read_byte_data(RM3100_ADDR, 0x25)
+        x_low = bus.read_byte_data(RM3100_ADDR, 0x26)
+        x = (x_high << 16) | (x_mid << 8) | x_low
+        if x & (1 << 23):  # Check if the 24-bit value is negative
+            x -= (1 << 24)
+
+        # Read Y-axis data (24-bit)
+        y_high = bus.read_byte_data(RM3100_ADDR, 0x27)
+        y_mid = bus.read_byte_data(RM3100_ADDR, 0x28)
+        y_low = bus.read_byte_data(RM3100_ADDR, 0x29)
+        y = (y_high << 16) | (y_mid << 8) | y_low
+        if y & (1 << 23):
+            y -= (1 << 24)
+
+        # Read Z-axis data (24-bit)
+        z_high = bus.read_byte_data(RM3100_ADDR, 0x2A)
+        z_mid = bus.read_byte_data(RM3100_ADDR, 0x2B)
+        z_low = bus.read_byte_data(RM3100_ADDR, 0x2C)
+        z = (z_high << 16) | (z_mid << 8) | z_low
+        if z & (1 << 23):
+            z -= (1 << 24)
+
         return x, y, z
+
     except IOError as e:
         print(f"Error reading magnetometer: {e}")
         return None, None, None
@@ -89,5 +97,3 @@ ani = FuncAnimation(fig, update, blit=True, interval=100)  # 100 ms refresh rate
 
 # Show the plot
 plt.show()
-
-
