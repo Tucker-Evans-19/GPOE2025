@@ -21,3 +21,12 @@ The `-c` (or `--config`) command line argument must be provided. The JSON file p
 | `camera_controls` | A dictionary containing settings for the camera like exposure time and sensor gain. This dictionary is defined by the `Picamera2` library. |
 
 The only dependencies for this script which aren't built-in Python libraries are `Picamera2` and `Numpy` both of which are installed by default on Raspberry Pi OS, so no package installation should be necessary.
+
+
+## miscellany
+- Don't install `h5py` like `pip install h5py`. This will throw an error like:
+```
+ImportError: libhdf5_serial.so.103: cannot open shared object file: No such file or directory
+```
+Instead, do:
+`sudo apt-get install python3-h5py`
