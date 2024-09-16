@@ -1,7 +1,7 @@
 import os
 import glob
 import time
-import matplotlib.pyplot as plt
+#import matplotlib.pyplot as plt
 
 os.system('modprobe w1-gpio')
 os.system('modprobe w1-therm')

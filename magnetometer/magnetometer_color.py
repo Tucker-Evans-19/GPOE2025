@@ -20,7 +20,7 @@ while True:
         time.sleep(rm.measurement_time) 
         reading = rm.get_next_reading()
         Bx, By, Bz = rm.convert_to_microteslas(reading) 
-        print(f'\r(Bx, By, Bz) = ({colored(Bx, get_color(Bx)):.3f}, {colored(By, get_color(By)):.3f}, {colored(Bz,get_color(Bz)):.3f}) µT', end='', flush=True)
+        print(f'\r(Bx, By, Bz) = ({colored(Bx, get_color(Bx))}, {colored(By, get_color(By))}, {colored(Bz,get_color(Bz))}) µT')
         time.sleep(1)
     except OSError as e:
         print("OS ERROR", flush=True)
