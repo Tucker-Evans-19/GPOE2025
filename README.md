@@ -31,6 +31,21 @@ ImportError: libhdf5_serial.so.103: cannot open shared object file: No such file
 Instead, do:
 `sudo apt-get install python3-h5py`
 
+Similarly, for `numpy` (which should already be installed to use picamera, I think), don't install it with pip, but `sudo apt-get install python3-numpy`
+
+Finally, since this won't be immediately reflected in the virtualenv needed to us the RM3100 libraries, make sure the config file, `.venv/pyvenv.cfg`, looks like:
+
+```
+home = /usr/bin
+include-system-site-packages = true
+version = 3.11.2
+executable = /usr/bin/python3.11
+command = /usr/bin/python3 -m venv /home/gpoe2025/GPOE2025/.venv
+```
+
+so that it will use the packages installed for the system-wide site-packages via `apt-get`.
+
+
 - check I2C devices:
       - run `i2cdetect -y 1`, you should see something like:
   
