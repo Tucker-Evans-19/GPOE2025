@@ -7,7 +7,14 @@ import numpy as np
 from data import _create_files
 from data import insert_datum
 
-from measure import prepare_magnetometer, get_magnetometer_measurement
+from measure import (
+    prepare_camera,
+    take_single_exposure,
+    prepare_magnetometer,
+    get_magnetometer_measurement,
+    prepare_thermometer,
+    get_temperature
+)
 
 SECONDS_TO_MINUTES = 1 / 60
 SECONDS_TO_HOURS = SECONDS_TO_MINUTES / 60
@@ -15,6 +22,7 @@ SECONDS_TO_DAYS = SECONDS_TO_HOURS / 24
 SECONDS_TO_MICROSECONDS = 1_000_000
 
 excess_minutes = 10
+exposure_time = 15 # [seconds] 
 exposure_cadence = 1 / 30 # [exposures per second]
 measurement_cadence = 1 # [measurements per second]
 
@@ -27,8 +35,8 @@ n_measurements = int(
     + excess_minutes * measurement_cadence / SECONDS_TO_MINUTES
 )
 
-n_xpix = 100
-n_ypix = 100
+n_xpix = None
+n_ypix = None
 
 
 def get_now():
@@ -47,10 +55,13 @@ create_files = lambda outdir, name: _create_files(
 
 
 rm = None
+cam = None
+therm_device_file = None
 
 
 async def get_measurements():
     magnetic_field = get_magnetometer_measurement(rm)
+    temperature = get_temperature(therm_device_file)
     return dict(
         temperature=np.random.normal(loc=0, scale=1),
         magnetic_field=magnetic_field
@@ -58,9 +69,9 @@ async def get_measurements():
 
 
 async def get_exposure():
-    await asyncio.sleep(15)
+    image_arr = take_single_exposure(cam)
     return dict(
-        exposure=np.random.normal(loc=0, scale=1, size=(n_xpix, n_ypix, 3)),
+        exposure=image_arr
     )
 
 
@@ -83,7 +94,7 @@ async def main():
         current = get_now()
         current_timestamp = current.timestamp()
 
-        target_end_timestamp = current_timestamp + 30
+        target_end_timestamp = current_timestamp + 1 / exposure_cadence
 
         print('current_timestamp=',current_timestamp)
 
@@ -155,4 +166,13 @@ async def main():
 
 if __name__ == '__main__':
     rm = prepare_magnetometer()
+    cam = prepare_camera(exposure_time)
+    therm_device_file = prepare_thermometer()
+
+    print('Taking a test exposure... ', end='')
+    image_arr = take_single_exposure(cam)
+    print('done.')
+
+    n_xpix, n_ypix, _ = image_arr.shape
+
     asyncio.run(main())
