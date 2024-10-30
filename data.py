@@ -105,6 +105,11 @@ def read_files(outdir, name, subset=None):
         timestamp = np.concatenate((timestamp, _t))
         data = np.concatenate((data, _d))
 
+    # sort by timestamp -- os.listdir doesn't guarantee it lists files temporally
+    sortidxs = np.argsort(timestamp)
+    timestamp = timestamp[sortidxs]
+    data = data[sortidxs]
+
     return timestamp, data
 
 
