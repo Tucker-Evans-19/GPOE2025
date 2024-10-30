@@ -63,7 +63,7 @@ async def get_measurements():
     magnetic_field = get_magnetometer_measurement(rm)
     temperature = get_temperature(therm_device_file)
     return dict(
-        temperature=np.random.normal(loc=0, scale=1),
+        temperature=temperature,
         magnetic_field=magnetic_field
     )
 
