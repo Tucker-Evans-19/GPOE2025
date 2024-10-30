@@ -134,3 +134,17 @@ def plot_files(outdir, name, subset=None):
     ax.plot(timestamp, data)
     fig.savefig(f'{outdir}/{name}.png')
 
+
+def plot_exposures(outdir):
+    """ WARNING: this will make a plot for each exposure!
+    this is example code """
+    from datetime import datetime
+    import matplotlib.pyplot as plt
+
+    _, data = read_files(outdir, 'exposures')
+
+    for i, d in enumerate(data):
+        fig, ax = plt.subplots()
+        ax.imshow(d)
+        fig.savefig(f'{outdir}/exposure-{i}.png')
+
