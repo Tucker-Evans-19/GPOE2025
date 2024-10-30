@@ -24,7 +24,10 @@ SECONDS_TO_MICROSECONDS = 1_000_000
 excess_minutes = 10
 exposure_time = 15 # [seconds] 
 exposure_cadence = 1 / 30 # [exposures per second]
+exposure_timeout = 25 # [seconds]
 measurement_cadence = 1 # [measurements per second]
+measurement_timeout = 1 # [seconds]
+max_sleep = 15 # [seconds; the fastest an exposure + measurements can happen is > 15 seconds, so within a 30 second window we sleep for at most that time]
 
 n_exposures = int(
     exposure_cadence / SECONDS_TO_HOURS
@@ -38,6 +41,7 @@ n_measurements = int(
 n_xpix = None
 n_ypix = None
 
+parentdir = '/media/usb_drive'
 
 def get_now():
     """ Get's the current UTC time """
@@ -80,7 +84,7 @@ async def main():
     start_of_day_timestamp = start.timestamp()
     start_of_hour_timestamp = start.timestamp()
 
-    outdir = f'./{get_datestr(start)}'
+    outdir = f'{parentdir}/{get_datestr(start)}'
     os.makedirs(outdir, exist_ok=True)
 
     exposure_file_path, measurement_file_path = create_files(
@@ -131,7 +135,18 @@ async def main():
         try:
             while not exposure_task.done():
                 measurement_timestamp = get_now().timestamp()
-                measurements = await get_measurements()
+                try:
+                    measurements = await asyncio.wait_for(
+                        get_measurements(),
+                        timeout=measurement_timeout
+                    )
+                except asyncio.TimeoutError:
+                    print(f'timeout occured at {measurement_timestamp} when calling thermometer or magnetometer')
+                    measurements = dict(
+                        temperature=0,
+                        magnetic_field=np.zeros(3)
+                    )
+
                 measurements = dict(
                     timestamp=measurement_timestamp,
                     **measurements
@@ -144,7 +159,14 @@ async def main():
         except asyncio.CancelledError:
             print("Fast operations cancelled.")
         finally:
-            exposure = await exposure_task
+            try:
+                exposure = await asyncio.wait_for(
+                    exposure_task,
+                    timeout=exposure_timeout
+                )
+            except asyncio.TimeoutError:
+                exposure = dict(exposure=np.zeros(n_xpix, n_ypix, 3, dtype=np.uint8))
+                
             exposure_datum = dict(
                 timestamp=exposure_start_timestamp,
                 **exposure
@@ -156,12 +178,18 @@ async def main():
         
         # once all of the above stuff is done, wait some delta # of seconds
         print('exposure complete; running out the clock...')
-        await asyncio.sleep(
-            (target_end_timestamp - get_now().timestamp())
+        sleep_length = min(
+            target_end_timestamp - get_now().timestamp(),
+            max_sleep
         )
+        await asyncio.sleep(sleep_length)
 
 
 if __name__ == '__main__':
+    if not os.path.isdir(parentdir):
+        print(f'WARNING: usb drive not found at {parentdir}. defaulting to /home/gpoe2025')
+        parentdir = '/home/gpoe2025'
+
     rm = prepare_magnetometer()
     cam = prepare_camera(exposure_time)
     therm_device_file = prepare_thermometer()
@@ -171,6 +199,5 @@ if __name__ == '__main__':
     print('done.')
 
     n_xpix, n_ypix, _ = image_arr.shape
-    
 
     asyncio.run(main())

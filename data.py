@@ -1,4 +1,6 @@
 import os
+from copy import copy
+
 import h5py
 import numpy as np
 
@@ -9,10 +11,11 @@ def _create_file(path, dataset_parameters):
     n_expected: int, the number of integers expected
     """
     
-    # TODO: warnings in case the time fucks up and it drives to overwrite an
-    # existing file... 
+    orig_name, ext = os.path.splitext(path)
 
-    # or maybe just have it append a 'v2' to the path
+    i = 2
+    while os.path.isfile(path):
+        path = f'{orig_name}-v{i}{ext}'
 
     f = h5py.File(path, 'w')
 
