@@ -87,6 +87,9 @@ async def main():
         outdir, start.hour
     )
 
+    print(f'made exposure file at {exposure_file_path}')
+    print(f'made measurement file at {measurement_file_path}')
+
     exposure_index = 0
     measurement_index = 0
 
@@ -154,14 +157,8 @@ async def main():
         # once all of the above stuff is done, wait some delta # of seconds
         print('exposure complete; running out the clock...')
         await asyncio.sleep(
-            (target_end_timestamp - get_now().timestamp()) #/ SECONDS_TO_MICROSECONDS
+            (target_end_timestamp - get_now().timestamp())
         )
-
-        # this seems to run the CPU pretty hot!! was at ~100% utilization consistently
-        #while get_now().timestamp() < target_end_timestamp:
-        #    continue
-
-        #print('all tasks done, measurement_index=',measurement_index,'exposure_index=',exposure_index)
 
 
 if __name__ == '__main__':
@@ -174,5 +171,6 @@ if __name__ == '__main__':
     print('done.')
 
     n_xpix, n_ypix, _ = image_arr.shape
+    
 
     asyncio.run(main())

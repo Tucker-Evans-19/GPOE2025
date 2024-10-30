@@ -3,6 +3,9 @@
 *.h5
 *.jpg
 *.swp
+*.log
+*.err
+*.out
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

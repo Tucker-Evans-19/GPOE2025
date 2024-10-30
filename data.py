@@ -27,7 +27,7 @@ def _create_files(outdir, name, n_measurements, n_exposures, n_xpix, n_ypix, n_c
         dict(
             name='exposure',
             shape=(n_exposures, n_xpix, n_ypix, n_colors),
-            dtype=np.float64
+            dtype=np.uint8
         )
     ]
 
