@@ -25,6 +25,7 @@ excess_minutes = 10
 exposure_time = 15 # [seconds] 
 exposure_cadence = 1 / 30 # [exposures per second]
 measurement_cadence = 1 # [measurements per second]
+measurement_timeout = 1 # wait at most 1 second to get a measurement from the magnetometer and thermometer
 
 n_exposures = int(
     exposure_cadence / SECONDS_TO_HOURS
@@ -131,7 +132,18 @@ async def main():
         try:
             while not exposure_task.done():
                 measurement_timestamp = get_now().timestamp()
-                measurements = await get_measurements()
+                try:
+                    measurements = await asyncio.wait_for(
+                        get_measurements(),
+                        timeout=measurement_timeout
+                    )
+                except asyncio.TimeoutError:
+                    print(f'timeout occured at {measurement_timestamp} when calling thermometer or magnetometer')
+                    measurements = dict(
+                        temperature=0,
+                        magnetic_field=np.zeros(3)
+                    )
+
                 measurements = dict(
                     timestamp=measurement_timestamp,
                     **measurements
@@ -144,6 +156,7 @@ async def main():
         except asyncio.CancelledError:
             print("Fast operations cancelled.")
         finally:
+            # TODO: add wait_for with timeout
             exposure = await exposure_task
             exposure_datum = dict(
                 timestamp=exposure_start_timestamp,
@@ -156,6 +169,7 @@ async def main():
         
         # once all of the above stuff is done, wait some delta # of seconds
         print('exposure complete; running out the clock...')
+        # TODO: check if this sleep is > 30 seconds. if so cap it at 30 seconds and raise a warning or something
         await asyncio.sleep(
             (target_end_timestamp - get_now().timestamp())
         )
