@@ -75,8 +75,8 @@ def read_file(path, subset):
     with h5py.File(path, 'r') as f:
         timestamp = f['timestamp'][:]
         data = f[subset][:]
-        return timestamp, data
-    print('done.')
+        print('done.')
+    return timestamp, data
 
 
 def read_files(outdir, name, subset=None):
