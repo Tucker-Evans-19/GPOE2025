@@ -63,3 +63,18 @@ so that it will use the packages installed for the system-wide site-packages via
   - `UU` indicates the clock is being used as a hardware clokc
   - `21` is the magnetometer (sometimes it's also `20`, `23`... we need to get this set to a fixed value
   - `50 - 57` might be the camera-- currently unknown
+
+# running the main code
+First, change into the code directory:
+`cd ~/GPOE2025`
+
+Check that your terminal displays the following after doing that:
+`(.venv) gpoe2025@birkeland:~/GPOE2025`
+(the name after the `@` will be different on different devices).
+
+If, in particular, you don't see `(.venv)` at the beginning, make sure to activate the virtual environment like:
+`source /home/gpoe2025/GPOE2025/.venv/bin/activate`
+
+Finally, run the main loop like:
+`nohup python -u main.py > run.log 2> run.err &`
+(I recommend changing `run` in the naming of the log and error files to something more unique, like the current date).

@@ -57,7 +57,7 @@ def insert_datum(path, datum, index):
             f[key][index] = value
 
 
-def read_file(path, subset)
+def read_file(path, subset):
     """ read data from a measurement/exposure file. not intended to be performant, just for plotting/inspection
 
     path: path to the .hdf5 file with the data
@@ -106,6 +106,7 @@ def read_files(outdir, name, subset=None):
 
 def plot_files(outdir, name, subset=None):
     """ this is example code """
+    from datetime import datetime
     import matplotlib.pyplot as plt
 
     timestamp, data = read_files(outdir, name, subset=subset)
@@ -113,7 +114,7 @@ def plot_files(outdir, name, subset=None):
     # convert integer timestamp into python datetime object
     # because matplotlib (should) handle these correctly
     timestamp = [
-        datetime.datetime.utcfromtimestamp(t)
+        datetime.utcfromtimestamp(t)
         for t in timestamp
     ]
 
