@@ -103,3 +103,21 @@ def read_files(outdir, name, subset=None):
 
     return timestamp, data
 
+
+def plot_files(outdir, name, subset=None):
+    """ this is example code """
+    import matplotlib.pyplot as plt
+
+    timestamp, data = read_files(outdir, name, subset=subset)
+
+    # convert integer timestamp into python datetime object
+    # because matplotlib (should) handle these correctly
+    timestamp = [
+        datetime.datetime.utcfromtimestamp(t)
+        for t in timestamp
+    ]
+
+    fig, ax = plt.subplots()
+    ax.plot(timestamp, data)
+    fig.savefig(f'{outdir}/{name}.png')
+
