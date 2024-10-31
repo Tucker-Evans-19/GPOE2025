@@ -64,8 +64,16 @@ therm_device_file = None
 
 
 async def get_measurements():
-    magnetic_field = get_magnetometer_measurement(rm)
-    temperature = get_temperature(therm_device_file)
+    try:
+        magnetic_field = get_magnetometer_measurement(rm)
+    except Exception as e:
+        print(f'error while trying to get measurement from magnetometer = {e}')
+
+    try:
+        temperature = get_temperature(therm_device_file)
+    except Exception as e:
+        print(f'error while trying to get measurement from thermometer = {e}')
+    
     return dict(
         temperature=temperature,
         magnetic_field=magnetic_field
@@ -73,7 +81,11 @@ async def get_measurements():
 
 
 async def get_exposure():
-    image_arr = take_single_exposure(cam)
+    if cam is not None:
+        image_arr = take_single_exposure(cam)
+    else:
+        image_arr = np.zeros((n_xpix, n_ypix, 3), dtype=np.uint8)
+
     return dict(
         exposure=image_arr
     )
@@ -191,13 +203,16 @@ if __name__ == '__main__':
         parentdir = '/home/gpoe'
 
     rm = prepare_magnetometer()
-    cam = prepare_camera(exposure_time)
+
+    try:
+        cam = prepare_camera(exposure_time)
+        print('Taking a test exposure... ', end='')
+        image_arr = take_single_exposure(cam)
+        print('done.')
+        n_xpix, n_ypix, _ = image_arr.shape
+    except Exception as e:
+        print(f'error while setting up camera or taking test exposure = {e}')
+        n_xpix, n_ypix = (100, 100)
+    
     therm_device_file = prepare_thermometer()
-
-    print('Taking a test exposure... ', end='')
-    image_arr = take_single_exposure(cam)
-    print('done.')
-
-    n_xpix, n_ypix, _ = image_arr.shape
-
     asyncio.run(main())
