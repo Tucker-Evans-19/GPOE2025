@@ -187,8 +187,8 @@ async def main():
 
 if __name__ == '__main__':
     if not os.path.isdir(parentdir):
-        print(f'WARNING: usb drive not found at {parentdir}. defaulting to /home/gpoe2025')
-        parentdir = '/home/gpoe2025'
+        print(f'WARNING: usb drive not found at {parentdir}. defaulting to /home/gpoe')
+        parentdir = '/home/gpoe'
 
     rm = prepare_magnetometer()
     cam = prepare_camera(exposure_time)
