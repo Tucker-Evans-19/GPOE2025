@@ -41,7 +41,7 @@ n_measurements = int(
 n_xpix = None
 n_ypix = None
 
-parentdir = '/media/usb_drive'
+parentdir = '/home/gpoe' #'/media/usb_drive'
 
 def get_now():
     """ Get's the current UTC time """
