@@ -65,14 +65,19 @@ therm_device_file = None
 
 async def get_measurements():
     try:
-        magnetic_field = get_magnetometer_measurement(rm)
+        if rm is not None:
+            magnetic_field = get_magnetometer_measurement(rm)
+        else:
+            magnetic_field = np.zeros((3,))
     except Exception as e:
         print(f'error while trying to get measurement from magnetometer = {e}')
+        magnetic_field = np.zeros((3,))
 
     try:
         temperature = get_temperature(therm_device_file)
     except Exception as e:
         print(f'error while trying to get measurement from thermometer = {e}')
+        temperature = 0
     
     return dict(
         temperature=temperature,
@@ -202,7 +207,10 @@ if __name__ == '__main__':
         print(f'WARNING: usb drive not found at {parentdir}. defaulting to /home/gpoe')
         parentdir = '/home/gpoe'
 
-    rm = prepare_magnetometer()
+    try:
+        rm = prepare_magnetometer()
+    except Exception as e:
+        print(f'exception setting up magnetometer = {e}')
 
     try:
         cam = prepare_camera(exposure_time)
