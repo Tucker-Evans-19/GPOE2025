@@ -220,7 +220,7 @@ if __name__ == '__main__':
         n_xpix, n_ypix, _ = image_arr.shape
     except Exception as e:
         print(f'error while setting up camera or taking test exposure = {e}')
-        n_xpix, n_ypix = (100, 100)
+        n_xpix, n_ypix = (1, 1)
     
     therm_device_file = prepare_thermometer()
     asyncio.run(main())
