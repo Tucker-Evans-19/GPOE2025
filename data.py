@@ -1,9 +1,13 @@
 import os
+import sys
 from copy import copy
 
 import h5py
 import numpy as np
 
+from logger import setup_logger
+
+log = setup_logger('data-logger', sys.stdout, 'data')
 
 def _create_file(path, dataset_parameters):
     """
@@ -15,12 +19,17 @@ def _create_file(path, dataset_parameters):
 
     i = 2
     while os.path.isfile(path):
+        log.warning(f'file {path} already exists; incrementing version')
         path = f'{orig_name}-v{i}{ext}'
+        i += 1
+
+    log.debug(f'making file at {path}')
 
     f = h5py.File(path, 'w')
 
     for params in dataset_parameters:
         f.create_dataset(**params)
+        log.debug(f'made dataset with parameters {params}')
 
     return path
 
@@ -46,18 +55,24 @@ def _create_files(outdir, name, n_measurements, n_exposures, n_xpix, n_ypix, n_c
         exposure_dataset_parameters
     )
 
+    log.info(f'made exposure file at {exposure_file_path}')
+
     measurement_file_path = _create_file(
         f'{outdir}/{name}-measurements.hdf5',
         measurement_dataset_parameters
     )
 
+    log.info(f'made measurement file at {measurement_file_path}')
+
     return exposure_file_path, measurement_file_path
 
 
 def insert_datum(path, datum, index):
+    log.info(f'start to insert at {path}')
     with h5py.File(path, 'r+') as f:
         for key, value in datum.items():
             f[key][index] = value
+    log.info(f'done inserting at {path}')
 
 
 def read_file(path, subset):
@@ -74,14 +89,14 @@ def read_file(path, subset):
     if path[-4:] != 'hdf5':
         raise ValueError(f'unrecognized extension on {path}; must be .hdf5')
 
-    print(f'reading in {path}...', end='')
     with h5py.File(path, 'r') as f:
         timestamp = f['timestamp'][:]
         mask = timestamp > 0
 
         timestamp = timestamp[mask]
         data = f[subset][mask]
-        print('done.')
+    
+    log.info(f'read in {path}')
 
     return timestamp, data
 

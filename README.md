@@ -78,3 +78,7 @@ If, in particular, you don't see `(.venv)` at the beginning, make sure to activa
 Finally, run the main loop like:
 `nohup python -u main.py > run.log 2> run.err &`
 (I recommend changing `run` in the naming of the log and error files to something more unique, like the current date).
+
+### setting up the usb drive
+modified the following line in `/etc/fstab`; last line should be:
+`/dev/sda1 /media/usb_drive            vfat    defaults,user,uid=1000,gid=1000,noatime 0 0`

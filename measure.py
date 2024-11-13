@@ -34,8 +34,11 @@ def prepare_camera(exposure_time, **kwargs):
 
 
 def take_single_exposure(cam):
-    image_arr = cam.capture_array("main")
-    image_arr = image_arr[:, 250:-480, :] # Cuts off all black regions of image and reduces data size by ~18 %
+    if cam is None:
+        image_arr = np.zeros((1, 1, 3), dtype=np.uint8)
+    else:
+        image_arr = cam.capture_array("main")
+        image_arr = image_arr[:, 250:-480, :] # Cuts off all black regions of image and reduces data size by ~18 %
     return image_arr
 
 
@@ -46,10 +49,13 @@ def prepare_magnetometer():
 
 
 def get_magnetometer_measurement(rm):
-    rm.start_single_reading()
-    time.sleep(rm.measurement_time)
-    reading = rm.get_next_reading()
-    Bx, By, Bz =  rm.convert_to_microteslas(reading)
+    if rm is None:
+        Bx, By, Bz = (0, 0, 0)
+    else:
+        rm.start_single_reading()
+        time.sleep(rm.measurement_time)
+        reading = rm.get_next_reading()
+        Bx, By, Bz = rm.convert_to_microteslas(reading)
     return np.array([Bx, By, Bz])
 
 
@@ -70,6 +76,9 @@ def _read_temp(device_file):
 
 
 def get_temperature(device_file):
+    if device_file is None:
+        return 0
+
     lines = _read_temp(device_file)
     while lines[0].strip()[-3:] != 'YES':
         # time.sleep(0.2)
