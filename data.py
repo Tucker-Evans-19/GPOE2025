@@ -6,7 +6,6 @@ import h5py
 import numpy as np
 
 from logger import setup_logger
-
 log = setup_logger('data-logger', sys.stdout, 'data')
 
 def _create_file(path, dataset_parameters):
