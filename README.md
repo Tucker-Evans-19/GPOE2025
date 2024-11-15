@@ -81,4 +81,4 @@ Finally, run the main loop like:
 
 ### setting up the usb drive
 modified the following line in `/etc/fstab`; last line should be:
-`/dev/sda1 /media/usb_drive            vfat    defaults,user,uid=1000,gid=1000,noatime 0 0`
+`/dev/sda1 /media/usb_drive            vfat    rw,umask=000`

@@ -31,7 +31,7 @@ SECONDS_TO_DAYS = SECONDS_TO_HOURS / 24
 SECONDS_TO_MICROSECONDS = 1_000_000
 
 excess_minutes = 10  # buffer the hdf5 file size by some amount
-exposure_time = 3 # 15 # [seconds] 
+exposure_time = 15 # [seconds] 
 exposure_cadence = 1 / 30 # [exposures per second]
 exposure_timeout = 100 # [seconds]
 measurement_cadence = 1 # [seconds; approx]
