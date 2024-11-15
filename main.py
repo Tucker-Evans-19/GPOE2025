@@ -1,6 +1,7 @@
 import os
 import sys
 import asyncio
+from time import time
 from datetime import datetime, timezone
 
 import numpy as np
@@ -20,27 +21,22 @@ from measure import (
 from logger import setup_logger
 log = None
 
-
 camera_critical = False
 thermometer_critical = True
 magnetometer_critical = False
-
 
 SECONDS_TO_MINUTES = 1 / 60
 SECONDS_TO_HOURS = SECONDS_TO_MINUTES / 60
 SECONDS_TO_DAYS = SECONDS_TO_HOURS / 24
 SECONDS_TO_MICROSECONDS = 1_000_000
 
-excess_minutes = 10
-exposure_time = 15 # [seconds] 
+excess_minutes = 10  # buffer the hdf5 file size by some amount
+exposure_time = 3 # 15 # [seconds] 
 exposure_cadence = 1 / 30 # [exposures per second]
-exposure_timeout = 25 # [seconds]
-#measurement_cadence = None # [measurements per second; determined by measurement time on magnetometer]
-measurement_cadence = 1
-measurement_timeout = 1 # [seconds]
+exposure_timeout = 100 # [seconds]
+measurement_cadence = 1 # [seconds; approx]
 
-# [seconds; the fastest an exposure + measurements can happen is > 15 seconds, so within a 30 second window we sleep for at most that time]
-max_sleep = 15 
+sleep_buffer = 1.0 
 
 n_exposures = int(
     exposure_cadence / SECONDS_TO_HOURS
@@ -55,8 +51,7 @@ n_xpix = None
 n_ypix = None
 n_colors = None 
 
-#parentdir = '/media/usb_drive'
-parentdir = '/home/gpoe'
+parentdir = '/media/usb_drive'
 
 def get_now():
     """ Get's the current UTC time """
@@ -83,6 +78,7 @@ async def insert_datum_async(path, datum, index):
     loop = asyncio.get_running_loop()    
     await loop.run_in_executor(None, insert_datum, path, datum, index)
 
+
 async def insert_in_hdf5(path, datum, index):
     """ wraps `insert_datum_async` with error handling. Note, we take a fixed
         timeout for all writes of 2 seconds, as the largest items we'll write
@@ -90,12 +86,24 @@ async def insert_in_hdf5(path, datum, index):
         seem to be of order >~ 10 MB/s    
     """
     try:
-        await asyncio.wait_for(
-            insert_datum_async(path, datum, index),
-            timeout=2
-        )
+        task = asyncio.create_task(insert_datum_async(path, datum, index))
+        async with asyncio.timeout(60):
+            await task #insert_datum_async(path, datum, index)
     except asyncio.TimeoutError:
         log.error(f'timeout when writing to {path} at index {index}')
+    except asyncio.CancelledError:
+        log.info('cancelled while inserting datum; finishing insert before')
+        
+        ntries = 0
+        while not task.done() and ntries < 10:
+            await asyncio.sleep(1)
+            ntries += 1
+
+        if task.done():
+            raise
+        else:
+            log.warning('insert not yet finished, file may be corrupted!')
+
     except Exception as e:
         log.error(e)
 
@@ -153,11 +161,11 @@ async def get_measurements():
         f'(Bx, By, Bz) = {magnetic_field}'
     )
 
-    return dict(
-        timestamp=timestamp,
-        temperature=temperature,
-        magnetic_field=magnetic_field
-    )
+    return np.array([
+        timestamp,
+        temperature,
+        *magnetic_field    
+    ])
 
 
 async def get_and_write_measurements(path, index, event=None):
@@ -242,6 +250,7 @@ async def main():
     exposure_index = 0
     measurement_index = 0
 
+    # TODO: kick off the event loop at some determined/fixed/'round' time?
     while True:
         current = get_now()
         current_timestamp = current.timestamp()
@@ -274,52 +283,33 @@ async def main():
 
             exposure_index = 0
             measurement_index = 0
-
+ 
         exposure_task = asyncio.create_task(get_and_write_exposure(
             exposure_file_path,
             exposure_index
         ))
 
-        try:
-            while not exposure_task.done():
-                measurement_index = await get_and_write_measurements(
-                    measurement_file_path,
-                    measurement_index
-                )
-        except asyncio.CancelledError:
-            log.info('Temperature/magnetic field measurements cancelled.')
-        finally:
-            await exposure_task
-            exposure_index = exposure_task.result() 
+        while target_end_timestamp - sleep_buffer > get_now().timestamp():
+            measurement_index = await get_and_write_measurements(
+                measurement_file_path,
+                measurement_index
+            )
 
-        # once all of the above stuff is done, wait some delta # of seconds
-        approx_sleep_length = target_end_timestamp - get_now().timestamp() 
-        log.debug(
-            f'exposure complete; waiting ~{approx_sleep_length:.1f}s '
-            'until next exposure'
-        )
+        # since we dont wait `exposure_task` to finish, we go ahead and
+        # increment to the next index
+        exposure_index += 1
+
+        approx_sleep_length = target_end_timestamp - get_now().timestamp()
         if approx_sleep_length < 0:
-            log.warning(
-                f'exposure + measurement loop took more than '
-                f'{1 / exposure_cadence}s; '
-                f'loop went over by {abs(approx_sleep_length):.3e}s'
-            )
-        elif approx_sleep_length > max_sleep:
-            log.warning(
-                f'exposure + measurement loop took less than {max_sleep}s'
-            )
-
-        # for the most exact sleep length, we want this to be the very last
-        # operation of any kind in the loop
-        sleep_length = min(
-            target_end_timestamp - get_now().timestamp(),
-            max_sleep
-        )
-        await asyncio.sleep(sleep_length)
+            log.warning(f'sleep length = {approx_sleep_length:.3e} < 0')
+        else:
+            log.info(f'sleeping ~{approx_sleep_length:.1f}s')
+            sleep_length = target_end_timestamp - get_now().timestamp()
+            await asyncio.sleep(sleep_length)
 
 
 if __name__ == '__main__':
-    log = setup_logger('main-logger', sys.stdout, 'main', level='DEBUG')
+    log = setup_logger('main-logger', sys.stdout, 'main', level='INFO')
 
     if not os.path.isdir(parentdir):
         # TODO: raise an error and crash if a 'usb_critical flag is set'
@@ -339,19 +329,19 @@ if __name__ == '__main__':
             log.warning(e)
 
     try:
-        #image_arr = asyncio.run(get_exposure())
-        from time import time
+        # TODO: some kind of test to make sure we're actually getting
+        # useful data? eg make sure there's at least some value > 0?        
         t1 = time()
         image_arr = take_single_exposure(cam)
         t2 = time()
-        print(f'op took {t2 - t1} s')
+
+        log.info(f'exposure & postprocessing took {t2 - t1:.3f} s')
+        
         n_xpix, n_ypix, n_colors = image_arr.shape
-        log.info('captured test exposure')
+
         log.debug(
             f'dims (n_xpix, n_ypix, n_colors) = {n_xpix, n_ypix, n_colors}'
         )
-        log.debug(f'exposure looks like: {image_arr}')
-        quit()
     except Exception as e:
         if camera_critical:
             log.error(e)
@@ -382,12 +372,8 @@ if __name__ == '__main__':
 
     try:
         meas = asyncio.run(get_measurements())
-        log.info(
-            'tested magnetometer & thermometer: '
-            f'temp = {meas["temperature"]}, '
-            f'(Bx, By, Bz) = {meas["magnetic_field"]}'
-        )
     except Exception as e:
         log.warning(e)
+
 
     asyncio.run(main())
