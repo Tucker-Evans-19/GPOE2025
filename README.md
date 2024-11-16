@@ -120,3 +120,13 @@ Note, you need to do this with superuser privileges, so open the file like
 `sudo nano /etc/fstab`
 
 and use password `aurora`.
+
+7. Finally, reboot the device and test the code, like:
+
+`sudo reboot`
+
+`cd ~/GPOE2025`
+
+`python main.py`
+
+You should see in `/media/usb_drive` a new folder with the current date; in there, open up `xx-measurements.txt`, and verify that there are non-zero temperature & timestamp values being recorded!
