@@ -130,3 +130,10 @@ and use password `aurora`.
 `python main.py`
 
 You should see in `/media/usb_drive` a new folder with the current date; in there, open up `xx-measurements.txt`, and verify that there are non-zero temperature & timestamp values being recorded!
+
+# Running the code (16 Nov 2024)
+
+```
+cd ~/GPOE2025
+nohup python -u main.py > run.log 2> run.err &
+```
