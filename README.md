@@ -79,6 +79,44 @@ Finally, run the main loop like:
 `nohup python -u main.py > run.log 2> run.err &`
 (I recommend changing `run` in the naming of the log and error files to something more unique, like the current date).
 
-### setting up the usb drive
-modified the following line in `/etc/fstab`; last line should be:
+# Updating the devices (16 Nov 2024)
+1. `ssh gpoe@{animal}.local`
+2. Check that the terminal displays `(.venv)` at the beginning of the line, which indicates the virtual environment is active, like:
+   
+`(.venv) gpoe2025@birkeland:~/GPOE2025`
+
+If not, add the following line to `~/.bashrc`:
+
+`source /home/gpoe/GPOE2025/.venv/bin/activate`
+
+Then, run `source ~/.bashrc`.
+
+4. `cd ~/GPOE2025`
+   
+5. Pull the latest version of the code;
+   
+```
+git fetch origin
+git checkout integrated-loop
+git pull origin integrated-loop
+```
+
+If you get a warning & it doesn't let you pull, stash your changes like so:
+
+```
+git add .
+git stash
+```
+And then repeat.
+
+6. Finally, we modify how the pi tries to mount the usb drive on boot.
+
+Replace the last line of `/etc/fstab` with:
+
 `/dev/sda1 /media/usb_drive            vfat    rw,umask=000`
+
+Note, you need to do this with superuser privileges, so open the file like
+
+`sudo nano /etc/fstab`
+
+and use password `aurora`.
