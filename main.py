@@ -49,6 +49,7 @@ exposure_time = config_dict["exposure_duration"] # [seconds]
 exposure_cadence = 1 / config_dict["exposure_cadence"] # [exposures per second]
 exposure_timeout = 100 # [seconds]
 measurement_cadence = config_dict["measurement_cadence"] # [seconds; approx]
+camera_gain = config_dict["camera_gain"]
 
 sleep_buffer = 1.0 
 
@@ -81,7 +82,6 @@ create_files = lambda outdir, name: _create_files(
     outdir, name, n_measurements, n_exposures, n_xpix, n_ypix
 )
 
-
 rm = None
 cam = None
 therm_device_file = None
@@ -91,7 +91,6 @@ async def insert_datum_async(path, datum, index):
     """ async wrapper around `insert_datum` """
     loop = asyncio.get_running_loop()    
     await loop.run_in_executor(None, insert_datum, path, datum, index)
-
 
 async def insert_in_hdf5(path, datum, index):
     """ wraps `insert_datum_async` with error handling. Note, we take a fixed
@@ -333,7 +332,7 @@ if __name__ == '__main__':
         parentdir = '/home/gpoe'
 
     try:
-        cam = prepare_camera(exposure_time)
+        cam = prepare_camera(exposure_time, AnalogueGain=camera_gain)
         log.info('setup camera')
     except Exception as e:
         if camera_critical:
