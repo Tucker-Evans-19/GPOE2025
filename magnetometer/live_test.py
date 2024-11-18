@@ -3,7 +3,7 @@ import board
 import rm3100
 
 i2c = board.I2C()
-rm = rm3100.RM3100_I2C(i2c, i2c_address=0x21, cycle_count=400)
+rm = rm3100.RM3100_I2C(i2c, i2c_address=0x20, cycle_count=400)
 
 while True:
     try:

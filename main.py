@@ -8,6 +8,12 @@ import numpy as np
 
 from data import _create_files
 from data import insert_datum
+import json
+import argparse
+
+parser = argparse.ArgumentParser()
+parser.add_argument("--config", "-c", help = 'path to JSON config file')
+args = parser.parse_args()
 
 from measure import (
     prepare_camera,
@@ -30,11 +36,19 @@ SECONDS_TO_HOURS = SECONDS_TO_MINUTES / 60
 SECONDS_TO_DAYS = SECONDS_TO_HOURS / 24
 SECONDS_TO_MICROSECONDS = 1_000_000
 
+if args.config is not None:
+    with open(args.config, "rb") as file:
+        config_dict = json.load(file)
+
+else:
+    with open("DEFAULT_CONFIG.json", "rb") as file:
+        config_dict = json.load(file)
+
 excess_minutes = 10  # buffer the hdf5 file size by some amount
-exposure_time = 15 # [seconds] 
-exposure_cadence = 1 / 30 # [exposures per second]
+exposure_time = config_dict["exposure_duration"] # [seconds] 
+exposure_cadence = 1 / config_dict["exposure_cadence"] # [exposures per second]
 exposure_timeout = 100 # [seconds]
-measurement_cadence = 1 # [seconds; approx]
+measurement_cadence = config_dict["measurement_cadence"] # [seconds; approx]
 
 sleep_buffer = 1.0 
 

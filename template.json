@@ -1,0 +1,6 @@
+{
+    "exposure_duration": 15,
+    "exposure_cadence": 30,
+    "camera_gain": 1,
+    "measurement_cadence": 2
+}
