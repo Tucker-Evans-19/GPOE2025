@@ -2,5 +2,7 @@
     "exposure_duration": 15,
     "exposure_cadence": 30,
     "camera_gain": 1,
-    "measurement_cadence": 2
+    "measurement_cadence": 2,
+    "observation_start_time": 17,
+    "observation_interval": 6
 }

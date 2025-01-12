@@ -10,6 +10,7 @@ from data import _create_files
 from data import insert_datum
 import json
 import argparse
+import schedule
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--config", "-c", help = 'path to JSON config file')
@@ -320,6 +321,8 @@ async def main():
             sleep_length = target_end_timestamp - get_now().timestamp()
             await asyncio.sleep(sleep_length)
 
+def async_main():
+    asyncio.run(main())
 
 if __name__ == '__main__':
     log = setup_logger('main-logger', sys.stdout, 'main', level='INFO')
@@ -388,5 +391,9 @@ if __name__ == '__main__':
     except Exception as e:
         log.warning(e)
 
+    # Schedule the function
+    schedule.every().day.at(config_dict["observation_start_time"]).do(async_main)  # Example: 2:30 PM
 
-    asyncio.run(main())
+    while True:
+        schedule.run_pending()
+        time.sleep(60)
