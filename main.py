@@ -1,8 +1,8 @@
 import os
 import sys
 import asyncio
-from time import time
-from datetime import datetime, timezone
+from time import time, sleep
+from datetime import datetime, timezone, timedelta
 
 import numpy as np
 
@@ -47,10 +47,12 @@ else:
 
 excess_minutes = 10  # buffer the hdf5 file size by some amount
 exposure_time = config_dict["exposure_duration"] # [seconds] 
-exposure_cadence = 1 / config_dict["exposure_cadence"] # [exposures per second]
+exposure_cadence = 1 / config_dict["exposure_interval"] # [exposures per second]
 exposure_timeout = 100 # [seconds]
 measurement_cadence = config_dict["measurement_cadence"] # [seconds; approx]
 camera_gain = config_dict["camera_gain"]
+
+frames_per_night = (config_dict["observation_interval"]*3600)/config_dict["exposure_interval"] # osb interval is units of hrs
 
 sleep_buffer = 1.0 
 
@@ -265,7 +267,7 @@ async def main():
     measurement_index = 0
 
     # TODO: kick off the event loop at some determined/fixed/'round' time?
-    while True:
+    for frame_num in range(0, int(frames_per_night)):
         current = get_now()
         current_timestamp = current.timestamp()
         target_end_timestamp = current_timestamp + 1 / exposure_cadence
@@ -321,8 +323,13 @@ async def main():
             sleep_length = target_end_timestamp - get_now().timestamp()
             await asyncio.sleep(sleep_length)
 
-def async_main():
-    asyncio.run(main())
+def time_until_observation():
+    now = datetime.now()
+    task_datetime = datetime.combine(now.date(), datetime.strptime(config_dict["observation_start_time"], "%H:%M").time())
+    if task_datetime < now:  # If the time has passed today, set it for tomorrow
+        task_datetime += timedelta(days=1)
+
+    return (task_datetime - now).total_seconds()    
 
 if __name__ == '__main__':
     log = setup_logger('main-logger', sys.stdout, 'main', level='INFO')
@@ -392,8 +399,29 @@ if __name__ == '__main__':
         log.warning(e)
 
     # Schedule the function
-    schedule.every().day.at(config_dict["observation_start_time"]).do(async_main)  # Example: 2:30 PM
+    #schedule.every().day.at(config_dict["observation_start_time"]).do(async_main)  # Example: 2:30 PM
+    log.info(f"Observation scheduled to begin at: {config_dict['observation_start_time']}")
 
+    begin_obs = False
     while True:
-        schedule.run_pending()
-        time.sleep(60)
+        time_to_start = time_until_observation()
+        log.info(f"Time to observation start: {round(time_to_start, 2)} seconds")
+
+        if time_to_start > 3600:
+            log.info(f"Sleeping for 1 hour")
+            sleep(3600)
+        elif time_to_start > 600:
+             log.info(f"Sleeping for 10 min")
+             sleep(600)
+        elif time_to_start > 60:
+            log.info(f"Sleeping for 1 min")
+            sleep(60)
+        else:
+            log.info(f"Sleeping until observation start time")
+            sleep(time_to_start)
+            begin_obs = True
+        
+        if begin_obs:
+            log.info(f"Beginning observations at {datetime.now().time()}")
+            asyncio.run(main())
+            begin_obs = False

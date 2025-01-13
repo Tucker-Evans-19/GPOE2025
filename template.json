@@ -3,6 +3,6 @@
     "exposure_cadence": 30,
     "camera_gain": 1,
     "measurement_cadence": 2,
-    "observation_start_time": 17,
+    "observation_start_time": "17:00",
     "observation_interval": 6
 }

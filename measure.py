@@ -12,7 +12,7 @@ import rm3100
 SECONDS_TO_MICROSECONDS = 1_000_000
 
 
-def prepare_camera(exposure_time, gain, **kwargs):
+def prepare_camera(exposure_time, **kwargs):
     """ exposure_time is in seconds """
 
     camera_controls = dict(
