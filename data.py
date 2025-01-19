@@ -9,7 +9,7 @@ from logger import setup_logger
 log = setup_logger('data-logger', sys.stdout, 'data')
 
 
-def _create_file(path, dataset_parameters, chunk_size=None):
+def _create_file(path, dataset_parameters, chunk_size=None, config=None):
     """
     path: must NOT have h5py on the end
     n_expected: int, the number of integers expected
@@ -30,6 +30,8 @@ def _create_file(path, dataset_parameters, chunk_size=None):
             for params in dataset_parameters:
                 f.create_dataset(**params)
                 log.debug(f'made dataset with parameters {params}')
+            if config is not None:
+                f.attrs['config'] = config
     elif ext == '.txt':
         with open(path, 'w') as f:
             header = ''
@@ -46,7 +48,7 @@ def _create_file(path, dataset_parameters, chunk_size=None):
 
 
 def _create_files(
-    outdir, name, n_measurements, n_exposures, n_xpix, n_ypix, n_colors=3
+    outdir, name, n_measurements, n_exposures, n_xpix, n_ypix, n_colors=3, config=None
 ):
     exposure_dataset_parameters = [
         dict(name='timestamp', shape=(n_exposures,), dtype=np.float64),
@@ -68,7 +70,8 @@ def _create_files(
 
     exposure_file_path = _create_file(
         f'{outdir}/{name}-exposures.hdf5',
-        exposure_dataset_parameters
+        exposure_dataset_parameters,
+        config=config
     )
 
     log.info(f'made exposure file at {exposure_file_path}')

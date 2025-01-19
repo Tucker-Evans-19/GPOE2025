@@ -13,7 +13,13 @@ import argparse
 import schedule
 
 parser = argparse.ArgumentParser()
-parser.add_argument("--config", "-c", help = 'path to JSON config file')
+parser.add_argument('--config', '-c', help='path to JSON config file', default='DEFAULT_CONFIG.json')
+parser.add_argument(
+    '--verbose',
+    '-v',
+    help='log debug statements to stdout',
+    action='store_true'
+)
 args = parser.parse_args()
 
 from measure import (
@@ -37,13 +43,8 @@ SECONDS_TO_HOURS = SECONDS_TO_MINUTES / 60
 SECONDS_TO_DAYS = SECONDS_TO_HOURS / 24
 SECONDS_TO_MICROSECONDS = 1_000_000
 
-if args.config is not None:
-    with open(args.config, "rb") as file:
-        config_dict = json.load(file)
-
-else:
-    with open("DEFAULT_CONFIG.json", "rb") as file:
-        config_dict = json.load(file)
+with open(args.config, "rb") as file:
+    config_dict = json.load(file)
 
 excess_minutes = 10  # buffer the hdf5 file size by some amount
 exposure_time = config_dict["exposure_duration"] # [seconds] 
@@ -82,7 +83,7 @@ def get_datestr(datetime):
 
 
 create_files = lambda outdir, name: _create_files(
-    outdir, name, n_measurements, n_exposures, n_xpix, n_ypix
+    outdir, name, n_measurements, n_exposures, n_xpix, n_ypix, config=config_dict
 )
 
 rm = None
@@ -323,6 +324,7 @@ async def main():
             sleep_length = target_end_timestamp - get_now().timestamp()
             await asyncio.sleep(sleep_length)
 
+
 def time_until_observation():
     now = datetime.now()
     task_datetime = datetime.combine(now.date(), datetime.strptime(config_dict["observation_start_time"], "%H:%M").time())
@@ -332,7 +334,8 @@ def time_until_observation():
     return (task_datetime - now).total_seconds()    
 
 if __name__ == '__main__':
-    log = setup_logger('main-logger', sys.stdout, 'main', level='INFO')
+    level = 'DEBUG' if args.verbose else 'INFO'
+    log = setup_logger('main-logger', sys.stdout, 'main', level=level)
 
     if not os.path.isdir(parentdir):
         # TODO: raise an error and crash if a 'usb_critical flag is set'
