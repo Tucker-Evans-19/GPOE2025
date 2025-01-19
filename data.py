@@ -1,5 +1,6 @@
 import os
 import sys
+import json
 from copy import copy
 
 import h5py
@@ -31,7 +32,10 @@ def _create_file(path, dataset_parameters, chunk_size=None, config=None):
                 f.create_dataset(**params)
                 log.debug(f'made dataset with parameters {params}')
             if config is not None:
-                f.attrs['config'] = config
+                if isinstance(config, dict):
+                    f.attrs['config'] = json.dumps(config)
+                else:  
+                    f.attrs['config'] = config
     elif ext == '.txt':
         with open(path, 'w') as f:
             header = ''

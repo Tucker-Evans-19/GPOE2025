@@ -20,6 +20,7 @@ parser.add_argument(
     help='log debug statements to stdout',
     action='store_true'
 )
+parser.add_argument('--now', '-n', action='store_true', help='ignore the `observation_start_time` argument in config, and start taking observations immediately')
 args = parser.parse_args()
 
 from measure import (
@@ -416,20 +417,23 @@ if __name__ == '__main__':
         time_to_start = time_until_observation()
         log.info(f"Time to observation start: {round(time_to_start, 2)} seconds")
 
-        if time_to_start > 3600:
-            log.info(f"Sleeping for 1 hour")
-            sleep(3600)
-        elif time_to_start > 600:
-             log.info(f"Sleeping for 10 min")
-             sleep(600)
-        elif time_to_start > 60:
-            log.info(f"Sleeping for 1 min")
-            sleep(60)
+        if not args.now:
+            if time_to_start > 3600:
+                log.info(f"Sleeping for 1 hour")
+                sleep(3600)
+            elif time_to_start > 600:
+                log.info(f"Sleeping for 10 min")
+                sleep(600)
+            elif time_to_start > 60:
+                log.info(f"Sleeping for 1 min")
+                sleep(60)
+            else:
+                log.info(f"Sleeping until observation start time")
+                sleep(time_to_start)
+                begin_obs = True
         else:
-            log.info(f"Sleeping until observation start time")
-            sleep(time_to_start)
             begin_obs = True
-        
+
         if begin_obs:
             log.info(f"Beginning observations at {datetime.now().time()}")
             asyncio.run(main())
