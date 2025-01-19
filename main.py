@@ -260,8 +260,10 @@ async def main():
     outdir = f'{parentdir}/{get_datestr(start)}'
     os.makedirs(outdir, exist_ok=True)
 
+    count = 0
+
     exposure_file_path, measurement_file_path = create_files(
-        outdir, start.hour
+        outdir, count
     )
 
     exposure_index = 0
@@ -282,8 +284,10 @@ async def main():
     
             log.info(f'24 hours have passed; changing outdir to {outdir}')
 
+            count = 0
+
             exposure_file_path, measurement_file_path = create_files(
-                outdir, current.hour
+                outdir, count
             )
 
             exposure_index = 0
@@ -294,8 +298,10 @@ async def main():
 
             log.info('1 hour has passed; making new measurement/exposure files')
 
+            count += 1
+
             exposure_file_path, measurement_file_path = create_files(
-                outdir, current.hour
+                outdir, count
             )
 
             exposure_index = 0
