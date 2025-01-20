@@ -1,8 +1,8 @@
 {
-    "exposure_duration": 15,
-    "exposure_interval": 30,
+    "exposure_duration": 2,
+    "exposure_interval": 10,
     "camera_gain": 1,
     "measurement_cadence": 2,
-    "observation_start_time": "22:00",
-    "observation_interval": 8
+    "observation_start_time": "17:36",
+    "observation_interval": 0.25
 }

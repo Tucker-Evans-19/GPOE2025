@@ -342,6 +342,8 @@ if __name__ == '__main__':
         parentdir = '/home/gpoe'
 
     try:
+        log.info("Sleeping for 1 min to wait to setup camera...")
+        sleep(60)
         cam = prepare_camera(exposure_time, AnalogueGain=camera_gain)
         log.info('setup camera')
     except Exception as e:
