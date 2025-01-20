@@ -31,6 +31,21 @@ ImportError: libhdf5_serial.so.103: cannot open shared object file: No such file
 Instead, do:
 `sudo apt-get install python3-h5py`
 
+Similarly, for `numpy` (which should already be installed to use picamera, I think), don't install it with pip, but `sudo apt-get install python3-numpy`
+
+Finally, since this won't be immediately reflected in the virtualenv needed to us the RM3100 libraries, make sure the config file, `.venv/pyvenv.cfg`, looks like:
+
+```
+home = /usr/bin
+include-system-site-packages = true
+version = 3.11.2
+executable = /usr/bin/python3.11
+command = /usr/bin/python3 -m venv /home/gpoe2025/GPOE2025/.venv
+```
+
+so that it will use the packages installed for the system-wide site-packages via `apt-get`.
+
+
 - check I2C devices:
       - run `i2cdetect -y 1`, you should see something like:
   
@@ -48,3 +63,70 @@ Instead, do:
   - `UU` indicates the clock is being used as a hardware clokc
   - `21` is the magnetometer (sometimes it's also `20`, `23`... we need to get this set to a fixed value
   - `50 - 57` might be the camera-- currently unknown
+
+# running the main code
+First, change into the code directory:
+`cd ~/GPOE2025`
+
+Check that your terminal displays the following after doing that:
+`(.venv) gpoe2025@birkeland:~/GPOE2025`
+(the name after the `@` will be different on different devices).
+
+If, in particular, you don't see `(.venv)` at the beginning, make sure to activate the virtual environment like:
+`source /home/gpoe2025/GPOE2025/.venv/bin/activate`
+
+Finally, run the main loop like:
+`nohup python -u main.py > run.log 2> run.err &`
+(I recommend changing `run` in the naming of the log and error files to something more unique, like the current date).
+
+# Updating the devices (16 Nov 2024)
+1. `ssh gpoe@{animal}.local`
+2. Check that the terminal displays `(.venv)` at the beginning of the line, which indicates the virtual environment is active, like:
+   
+`(.venv) gpoe2025@birkeland:~/GPOE2025`
+
+If not, add the following line to `~/.bashrc`:
+
+`source /home/gpoe/GPOE2025/.venv/bin/activate`
+
+Then, run `source ~/.bashrc`.
+
+4. `cd ~/GPOE2025`
+   
+5. Pull the latest version of the code;
+   
+```
+git fetch origin
+git checkout integrated-loop
+git pull origin integrated-loop
+```
+
+If you get a warning & it doesn't let you pull, stash your changes like so:
+
+```
+git add .
+git stash
+```
+And then repeat.
+
+6. Finally, we modify how the pi tries to mount the usb drive on boot.
+
+Replace the last line of `/etc/fstab` with:
+
+`/dev/sda1 /media/usb_drive            vfat    rw,umask=000`
+
+Note, you need to do this with superuser privileges, so open the file like
+
+`sudo nano /etc/fstab`
+
+and use password `aurora`.
+
+7. Finally, reboot the device and test the code, like:
+
+`sudo reboot`
+
+`cd ~/GPOE2025`
+
+`python main.py`
+
+You should see in `/media/usb_drive` a new folder with the current date; in there, open up `xx-measurements.txt`, and verify that there are non-zero temperature & timestamp values being recorded!
