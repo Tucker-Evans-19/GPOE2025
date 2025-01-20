@@ -2,8 +2,8 @@
 
 echo -e '===== running update & upgrade ===== \n\n'
 
-#sudo apt-get update
-#sudo apt-get upgrade
+sudo apt-get update
+sudo apt-get upgrade
 
 echo -e '\n\n ===== installing picamera2 ===== \n\n'
 
