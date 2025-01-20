@@ -1,8 +1,9 @@
 # !/bin/bash
 
 # check if a special file exists
-if [ -f /home/gpoe2025/RUN ]; then
+if [ -f /home/gpoe/GPOE2025/RUN ]; then
     echo 'found RUN file; starting main control loop!'
-    cd /home/gpoe2025/GPOE2025
-    nohup python -u main.py > run.log 2> run.err &
+    echo "Using config file:" $1
+    cd /home/gpoe/GPOE2025
+    nohup python -u main.py -c $1 > run.log 2> run.err &
 fi
