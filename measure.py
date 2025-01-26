@@ -18,7 +18,8 @@ def prepare_camera(exposure_time, **kwargs):
     camera_controls = dict(
         ExposureTime=exposure_time * SECONDS_TO_MICROSECONDS,
         AnalogueGain=1,
-        AeEnable=False
+        AeEnable=False,
+        AwbEnable=False,
     )
     camera_controls.update(kwargs)
 
